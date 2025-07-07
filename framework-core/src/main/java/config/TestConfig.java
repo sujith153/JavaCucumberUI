@@ -1,36 +1,52 @@
-package org.example.core.config;
+package config;
 
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import java.io.IOException;
+ import java.io.IOException;
+import java.io.InputStream;
+import java.util.Objects;
 import java.util.Properties;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Getter
-public class TestConfig {
+public final class TestConfig {
     private static final Properties properties = new Properties();
-    private static TestConfig instance;
 
     private TestConfig() {
-        loadProperties();
+        // private constructor to enforce singleton
+    }
+
+    private static class Holder {
+        private static final TestConfig INSTANCE = new TestConfig();
+
+        static {
+            loadProperties();
+        }
+
+        private static void loadProperties() {
+            String env = System.getProperty("env", "qa");
+            String configFile = String.format("config/%s/config.properties", env);
+
+            try (InputStream input = TestConfig.class.getClassLoader().getResourceAsStream(configFile)) {
+                if (input != null) {
+                    properties.load(input);
+                    log.info("Loaded configuration for environment: {}", env);
+                } else {
+                    log.warn("Config file not found: {}. Loading default configuration.", configFile);
+                    try (InputStream defaultInput = TestConfig.class.getClassLoader()
+                            .getResourceAsStream("config/base-config.properties")) {
+                        if (defaultInput != null) {
+                            properties.load(defaultInput);
+                            log.info("Loaded default configuration");
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                log.warn("Failed to load configuration file", e);
+            }
+        }
     }
 
     public static TestConfig getInstance() {
-        if (instance == null) {
-            instance = new TestConfig();
-        }
-        return instance;
-    }
-
-    private void loadProperties() {
-        String env = System.getProperty("env", "qa");
-        try {
-            properties.load(getClass().getClassLoader().getResourceAsStream("config/" + env + "/config.properties"));
-            log.info("Loaded configuration for environment: {}", env);
-        } catch (IOException e) {
-            log.error("Failed to load properties file", e);
-            throw new RuntimeException("Failed to load properties file", e);
-        }
+        return Holder.INSTANCE;
     }
 
     public String getProperty(String key) {
@@ -39,5 +55,9 @@ public class TestConfig {
 
     public String getProperty(String key, String defaultValue) {
         return properties.getProperty(key, defaultValue);
+    }
+
+    public boolean hasProperty(String key) {
+        return properties.containsKey(key);
     }
 }

@@ -17,26 +17,44 @@
     </modules>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <cucumber.version>7.15.0</cucumber.version>
+        <maven.compiler.release>17</maven.compiler.release>
         <selenium.version>4.18.1</selenium.version>
         <selenide.version>7.2.3</selenide.version>
+        <cucumber.version>7.15.0</cucumber.version>
         <rest-assured.version>5.4.0</rest-assured.version>
-        <junit.version>4.13.2</junit.version>
         <testng.version>7.9.0</testng.version>
         <slf4j.version>2.0.13</slf4j.version>
-        <lombok.version>1.18.30</lombok.version>
-        <javafaker.version>1.0.2</javafaker.version>
+        <lombok.version>1.18.20</lombok.version>
         <jackson.version>2.16.1</jackson.version>
-        <apache.commons.version>3.14.0</apache.commons.version>
-        <velocity.version>2.3</velocity.version>
-        <cucumber.reporting.version>5.7.8</cucumber.reporting.version>
+        <webdrivermanager.version>5.6.3</webdrivermanager.version>
+        <hamcrest.version>2.2</hamcrest.version>
+        <assertj.version>3.25.3</assertj.version>
+        <awaitility.version>4.2.0</awaitility.version>
+        <javafaker.version>1.0.2</javafaker.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- Selenium Dependencies -->
+            <dependency>
+                <groupId>org.seleniumhq.selenium</groupId>
+                <artifactId>selenium-java</artifactId>
+                <version>${selenium.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.bonigarcia</groupId>
+                <artifactId>webdrivermanager</artifactId>
+                <version>${webdrivermanager.version}</version>
+            </dependency>
+
+            <!-- Selenide -->
+            <dependency>
+                <groupId>com.codeborne</groupId>
+                <artifactId>selenide</artifactId>
+                <version>${selenide.version}</version>
+            </dependency>
+
             <!-- Cucumber Dependencies -->
             <dependency>
                 <groupId>io.cucumber</groupId>
@@ -45,30 +63,50 @@
             </dependency>
             <dependency>
                 <groupId>io.cucumber</groupId>
-                <artifactId>cucumber-junit</artifactId>
+                <artifactId>cucumber-testng</artifactId>
                 <version>${cucumber.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.cucumber</groupId>
-                <artifactId>cucumber-testng</artifactId>
+                <artifactId>cucumber-picocontainer</artifactId>
                 <version>${cucumber.version}</version>
+            </dependency>
+
+            <!-- REST Assured -->
+            <dependency>
+                <groupId>io.rest-assured</groupId>
+                <artifactId>rest-assured</artifactId>
+                <version>${rest-assured.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.rest-assured</groupId>
+                <artifactId>json-schema-validator</artifactId>
+                <version>${rest-assured.version}</version>
             </dependency>
 
             <!-- Test Dependencies -->
             <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
                 <version>${testng.version}</version>
-                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.hamcrest</groupId>
+                <artifactId>hamcrest</artifactId>
+                <version>${hamcrest.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.awaitility</groupId>
+                <artifactId>awaitility</artifactId>
+                <version>${awaitility.version}</version>
             </dependency>
 
-            <!-- Utility Dependencies -->
+            <!-- Utilities -->
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
@@ -89,26 +127,10 @@
                 <artifactId>slf4j-simple</artifactId>
                 <version>${slf4j.version}</version>
             </dependency>
-
-            <!-- Jackson for JSON -->
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
                 <version>${jackson.version}</version>
-            </dependency>
-
-            <!-- Apache Commons -->
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-lang3</artifactId>
-                <version>${apache.commons.version}</version>
-            </dependency>
-
-            <!-- Cucumber Reporting -->
-            <dependency>
-                <groupId>net.masterthought</groupId>
-                <artifactId>cucumber-reporting</artifactId>
-                <version>${cucumber.reporting.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -120,36 +142,16 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.11.0</version>
+                    <configuration>
+                        <release>${maven.compiler.release}</release>
+                        <encoding>${project.build.sourceEncoding}</encoding>
+                        <parameters>true</parameters>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>3.2.5</version>
-                </plugin>
-                <plugin>
-                    <groupId>net.masterthought</groupId>
-                    <artifactId>maven-cucumber-reporting</artifactId>
-                    <version>${cucumber.reporting.version}</version>
-                    <executions>
-                        <execution>
-                            <id>execution</id>
-                            <phase>verify</phase>
-                            <goals>
-                                <goal>generate</goal>
-                            </goals>
-                            <configuration>
-                                <projectName>Cucumber BDD Testing</projectName>
-                                <outputDirectory>${project.build.directory}/cucumber-reports</outputDirectory>
-                                <inputDirectory>${project.build.directory}/json-reports</inputDirectory>
-                                <jsonFiles>
-                                    <param>**/*.json</param>
-                                </jsonFiles>
-                                <mergeFeaturesById>true</mergeFeaturesById>
-                                <checkBuildResult>false</checkBuildResult>
-                                <skipEmptyJSONFiles>true</skipEmptyJSONFiles>
-                            </configuration>
-                        </execution>
-                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
